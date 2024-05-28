@@ -5,7 +5,7 @@ input: data/anya_rgba.png
 prompt:
 negative_prompt:
 # input mesh for stage 2 (auto-search from stage 1 output path if None)
-mesh:
+mesh: logs/anya_mesh_2.obj
 # estimated elevation angle for input image 
 elevation: 0
 # reference image resolution
