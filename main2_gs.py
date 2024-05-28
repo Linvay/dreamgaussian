@@ -72,13 +72,6 @@ class GUI:
         if self.opt.negative_prompt is not None:
             self.negative_prompt = self.opt.negative_prompt
 
-        # override if provide a checkpoint
-        if self.opt.load is not None:
-            self.renderer.initialize(self.opt.load)            
-        else:
-            # initialize gaussians to a blob
-            self.renderer.initialize(num_pts=self.opt.num_pts)
-
         if self.gui:
             dpg.create_context()
             self.register_dpg()
@@ -107,10 +100,12 @@ class GUI:
 
         self.step = 0
 
-        # setup training
-        self.renderer.gaussians.training_setup(self.opt)
-        # do not do progressive sh-level
-        self.renderer.gaussians.active_sh_degree = self.renderer.gaussians.max_sh_degree
+        # load ckpt
+        ckpt_path = os.path.join(self.opt.outdir, f"{self.opt.save_path}_ckpt.pth")
+        print(f"[INFO] loading ckpt from [{ckpt_path}]...")
+        self.renderer.gaussians.restore(torch.load(ckpt_path, map_location=self.device), self.opt, is_load_optimizer=False)
+        print("[INFO] loaded ckpt!")
+
         self.optimizer = self.renderer.gaussians.optimizer
 
         # default camera
@@ -128,7 +123,7 @@ class GUI:
             self.cam.near,
             self.cam.far,
         )
-        
+
         self.enable_sd = self.opt.lambda_sd > 0 and self.prompt != ""
         self.enable_zero123 = self.opt.lambda_zero123 > 0 and self.input_img is not None
 
@@ -201,11 +196,11 @@ class GUI:
 
                 # rgb loss
                 image = out["image"].unsqueeze(0) # [1, 3, H, W] in [0, 1]
-                loss = loss + 10000 * (step_ratio if self.opt.warmup_rgb_loss else 1) * F.mse_loss(image, self.input_img_torch)
+                loss = loss + 100 * (step_ratio if self.opt.warmup_rgb_loss else 1) * F.mse_loss(image, self.input_img_torch)
 
                 # mask loss
                 mask = out["alpha"].unsqueeze(0) # [1, 1, H, W] in [0, 1]
-                loss = loss + 1000 * (step_ratio if self.opt.warmup_rgb_loss else 1) * F.mse_loss(mask, self.input_mask_torch)
+                loss = loss + 10 * (step_ratio if self.opt.warmup_rgb_loss else 1) * F.mse_loss(mask, self.input_mask_torch)
 
             ### novel view (manual batch)
             render_resolution = 128 if step_ratio < 0.3 else (256 if step_ratio < 0.6 else 512)
@@ -260,15 +255,22 @@ class GUI:
             # kiui.vis.plot_image(images)
 
             # guidance loss
+            strength = step_ratio * 0.15 + 0.8
             if self.enable_sd:
                 if self.opt.mvdream or self.opt.imagedream:
-                    loss = loss + self.opt.lambda_sd * self.guidance_sd.train_step(images, poses, step_ratio=step_ratio if self.opt.anneal_timestep else None)
+                    refined_images = self.guidance_sd.refine(images, poses, strength=strength).float()
+                    refined_images = F.interpolate(refined_images, (render_resolution, render_resolution), mode="bilinear", align_corners=False)
+                    loss = loss + self.opt.lambda_sd * F.mse_loss(images, refined_images)
                 else:
-                    loss = loss + self.opt.lambda_sd * self.guidance_sd.train_step(images, step_ratio=step_ratio if self.opt.anneal_timestep else None)
+                    refined_images = self.guidance_sd.refine(images, strength=strength).float()
+                    refined_images = F.interpolate(refined_images, (render_resolution, render_resolution), mode="bilinear", align_corners=False)
+                    loss = loss + self.opt.lambda_sd * F.mse_loss(images, refined_images)
 
             if self.enable_zero123:
-                loss = loss + self.opt.lambda_zero123 * self.guidance_zero123.train_step(images, vers, hors, radii, step_ratio=step_ratio if self.opt.anneal_timestep else None, default_elevation=self.opt.elevation)
-            
+                refined_images = self.guidance_zero123.refine(images, vers, hors, radii, strength=strength, default_elevation=self.opt.elevation).float()
+                refined_images = F.interpolate(refined_images, (render_resolution, render_resolution), mode="bilinear", align_corners=False)
+                loss = loss + self.opt.lambda_zero123 * F.mse_loss(images, refined_images)
+                
             # optimize step
             loss.backward()
             self.optimizer.step()
@@ -405,12 +407,12 @@ class GUI:
     def save_model(self, mode='geo', texture_size=1024):
         os.makedirs(self.opt.outdir, exist_ok=True)
         if mode == 'geo':
-            path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh.ply')
+            path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh_2.ply')
             mesh = self.renderer.gaussians.extract_mesh(path, self.opt.density_thresh)
             mesh.write_ply(path)
 
         elif mode == 'geo+tex':
-            path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh.' + self.opt.mesh_format)
+            path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh_2.' + self.opt.mesh_format)
             mesh = self.renderer.gaussians.extract_mesh(path, self.opt.density_thresh)
 
             # perform texture extraction
@@ -537,13 +539,9 @@ class GUI:
             mesh.albedo = torch.from_numpy(albedo).to(self.device)
             mesh.write(path)
 
-        elif mode == "model":
-            path = os.path.join(self.opt.outdir, self.opt.save_path + '_model.ply')
-            self.renderer.gaussians.save_ply(path)
-        
         else:
-            path = os.path.join(self.opt.outdir, self.opt.save_path + '_ckpt.pth')
-            torch.save(self.renderer.gaussians.capture(), path)
+            path = os.path.join(self.opt.outdir, self.opt.save_path + '_model_2.ply')
+            self.renderer.gaussians.save_ply(path)
 
         print(f"[INFO] save model to {path}.")
 
@@ -900,7 +898,6 @@ class GUI:
         # save
         self.save_model(mode='model')
         self.save_model(mode='geo+tex')
-        self.save_model(mode="ckpt")
         
 
 if __name__ == "__main__":
@@ -919,4 +916,4 @@ if __name__ == "__main__":
     if opt.gui:
         gui.render()
     else:
-        gui.train(opt.iters)
+        gui.train(opt.iters_refine)

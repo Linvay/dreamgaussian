@@ -175,7 +175,7 @@ class GaussianModel:
             self.spatial_lr_scale,
         )
     
-    def restore(self, model_args, training_args):
+    def restore(self, model_args, training_args, is_load_optimizer=True):
         (self.active_sh_degree, 
         self._xyz, 
         self._features_dc, 
@@ -191,7 +191,7 @@ class GaussianModel:
         self.training_setup(training_args)
         self.xyz_gradient_accum = xyz_gradient_accum
         self.denom = denom
-        self.optimizer.load_state_dict(opt_dict)
+        if is_load_optimizer: self.optimizer.load_state_dict(opt_dict)
 
     @property
     def get_scaling(self):

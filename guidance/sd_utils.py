@@ -165,7 +165,7 @@ class StableDiffusion(nn.Module):
                 t = torch.randint(self.min_step, self.max_step + 1, (batch_size,), dtype=torch.long, device=self.device)
 
             # w(t), sigma_t^2
-            w = (1 - self.alphas[t]).view(batch_size, 1, 1, 1)
+            w = torch.sqrt(1 - self.alphas[t]).view(batch_size, 1, 1, 1)
 
             # predict the noise residual with unet, NO grad!
             # add noise

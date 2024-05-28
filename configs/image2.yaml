@@ -2,10 +2,10 @@
 # input rgba image path (default to None, can be load in GUI too)
 input: data/anya_rgba.png
 # input text prompt (default to None, can be input in GUI too)
-prompt: 
-negative_prompt: 
+prompt:
+negative_prompt:
 # input mesh for stage 2 (auto-search from stage 1 output path if None)
-mesh: logs/anya_mesh.obj
+mesh:
 # estimated elevation angle for input image 
 elevation: 0
 # reference image resolution
@@ -64,14 +64,14 @@ W: 800
 ### Gaussian splatting
 num_pts: 5000
 sh_degree: 0
-position_lr_init: 0.001
+position_lr_init: 0.0001
 position_lr_final: 0.00002
 position_lr_delay_mult: 0.02
 position_lr_max_steps: 500
 feature_lr: 0.01
 opacity_lr: 0.05
-scaling_lr: 0.005
-rotation_lr: 0.005
+scaling_lr: 0.0005
+rotation_lr: 0.0005
 percent_dense: 0.01
 density_start_iter: 100
 density_end_iter: 3000
