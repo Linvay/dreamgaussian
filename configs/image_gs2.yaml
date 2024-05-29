@@ -1,11 +1,11 @@
 ### Input
 # input rgba image path (default to None, can be load in GUI too)
-input: data/anya_rgba.png
+input: 
 # input text prompt (default to None, can be input in GUI too)
 prompt:
 negative_prompt:
 # input mesh for stage 2 (auto-search from stage 1 output path if None)
-mesh: logs/anya_mesh_2.obj
+mesh: 
 # estimated elevation angle for input image 
 elevation: 0
 # reference image resolution
@@ -16,7 +16,7 @@ density_thresh: 1
 ### Output
 outdir: logs
 mesh_format: obj
-save_path: anya
+save_path: 
 
 ### Training
 # use mvdream instead of sd 2.1
