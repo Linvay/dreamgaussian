@@ -181,7 +181,7 @@ class GUI:
         for _ in range(self.train_steps):
 
             self.step += 1
-            step_ratio = min(1, self.step / self.opt.iters)
+            step_ratio = min(1, self.step / self.opt.iters_refine)
 
             # update lr
             self.renderer.gaussians.update_learning_rate(self.step)
@@ -269,6 +269,13 @@ class GUI:
                 refined_images = self.guidance_zero123.refine(images, vers, hors, radii, strength=strength, default_elevation=self.opt.elevation).float()
                 refined_images = F.interpolate(refined_images, (render_resolution, render_resolution), mode="bilinear", align_corners=False)
                 loss = loss + self.opt.lambda_zero123 * F.mse_loss(images, refined_images)
+            
+            # def plot_refine_images(imgs):
+            #     from torchvision.utils import make_grid, save_image
+            #     imgs = make_grid(imgs, nrow=1)
+            #     save_image(imgs, f"./logs/refine_images_{self.step}.png")
+            
+            # plot_refine_images(refined_images)
                 
             # optimize step
             loss.backward()
