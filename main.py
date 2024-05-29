@@ -918,9 +918,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, help="path to the yaml config file")
     args, extras = parser.parse_known_args()
+    print("-" * 50)
+    print(args, extras)
+    print("-" * 50)
 
     # override default config from cli
     opt = OmegaConf.merge(OmegaConf.load(args.config), OmegaConf.from_cli(extras))
+    print(opt)
+    print("-" * 50)
 
     gui = GUI(opt)
 

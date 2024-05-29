@@ -61,6 +61,12 @@ class GUI:
         self.optimizer = None
         self.step = 0
         self.train_steps = 1  # steps per rendering loop
+
+        # load ckpt
+        ckpt_path = os.path.join(self.opt.outdir, f"{self.opt.save_path}_ckpt.pth")
+        print(f"[INFO] loading ckpt from [{ckpt_path}]...")
+        self.renderer.gaussians.restore(torch.load(ckpt_path, map_location=self.device), self.opt, is_load_optimizer=False)
+        print("[INFO] loaded ckpt!")
         
         # load input data from cmdline
         if self.opt.input is not None:
@@ -99,13 +105,6 @@ class GUI:
     def prepare_train(self):
 
         self.step = 0
-
-        # load ckpt
-        ckpt_path = os.path.join(self.opt.outdir, f"{self.opt.save_path}_ckpt.pth")
-        print(f"[INFO] loading ckpt from [{ckpt_path}]...")
-        self.renderer.gaussians.restore(torch.load(ckpt_path, map_location=self.device), self.opt, is_load_optimizer=False)
-        print("[INFO] loaded ckpt!")
-
         self.optimizer = self.renderer.gaussians.optimizer
 
         # default camera
