@@ -716,6 +716,14 @@ class GUI:
                     )
                     dpg.bind_item_theme("_button_save_mesh_with_tex", theme_button)
 
+                    dpg.add_button(
+                        label="ckpt",
+                        tag="_button_save_ckpt",
+                        callback=callback_save,
+                        user_data='ckpt',
+                    )
+                    dpg.bind_item_theme("_button_save_ckpt", theme_button)
+
                     dpg.add_input_text(
                         label="",
                         default_value=self.opt.save_path,
