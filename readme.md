@@ -1,18 +1,18 @@
-# DreamGaussian
+# [2024 3DCV Final Report] Group 9: DreamGaussian
 
-This repository contains the official implementation for [DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation](https://arxiv.org/abs/2309.16653).
+This repository is based on [DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation](https://arxiv.org/abs/2309.16653).
 
-### [Project Page](https://dreamgaussian.github.io) | [Arxiv](https://arxiv.org/abs/2309.16653)
+### [Original Project Page](https://dreamgaussian.github.io) | [Arxiv](https://arxiv.org/abs/2309.16653)
 
 https://github.com/dreamgaussian/dreamgaussian/assets/25863658/db860801-7b9c-4b30-9eb9-87330175f5c8
 
-### News
+<!-- ### News
 
 - 2023.12.22: add experimental support for [ImageDream](https://github.com/bytedance/ImageDream), check [imagedream.yaml](./configs/image_sai.yaml).
 - 2023.12.14: add support for [Stable-Zero123](https://stability.ai/news/stable-zero123-3d-generation), check [image_sai.yaml](./configs/image_sai.yaml).
-- 2023.10.21: add support for [MVDream](https://github.com/bytedance/MVDream), check [text_mv.yaml](./configs/text_mv.yaml).
+- 2023.10.21: add support for [MVDream](https://github.com/bytedance/MVDream), check [text_mv.yaml](./configs/text_mv.yaml). -->
 
-### [Colab demo](https://github.com/camenduru/dreamgaussian-colab)
+<!-- ### [Colab demo](https://github.com/camenduru/dreamgaussian-colab)
 
 - Image-to-3D: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1sLpYmmLS209-e5eHgcuqdryFRRO6ZhFS?usp=sharing)
 - Text-to-3D: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/camenduru/dreamgaussian-colab/blob/main/dreamgaussian_colab.ipynb)
@@ -20,9 +20,11 @@ https://github.com/dreamgaussian/dreamgaussian/assets/25863658/db860801-7b9c-4b3
 ### [Gradio demo](https://huggingface.co/spaces/jiawei011/dreamgaussian)
 
 - Image-to-3D: <a href="https://huggingface.co/spaces/jiawei011/dreamgaussian"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Gradio%20Demo-Huggingface-orange"></a>
-- Run Gradio demo on Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1owXJthskHoVXBNvxUB0Bg0JP2Rc7QsTe?usp=sharing)
+- Run Gradio demo on Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1owXJthskHoVXBNvxUB0Bg0JP2Rc7QsTe?usp=sharing) -->
 
-## Install
+## Installation
+
+**IMPORTANT NOTE**: Some libraries require CUDA toolkit to compile, make sure you have the correct CUDA version (corresponding to the PyTorch version you have installed) installed on your operating system.
 
 ```bash
 pip install -r requirements.txt
@@ -49,8 +51,37 @@ pip install git+https://github.com/bytedance/ImageDream/#subdirectory=extern/Ima
 
 Tested on:
 
-- Ubuntu 22 with torch 1.12 & CUDA 11.6 on a V100.
+- Ubuntu 22 with torch 2.3 & CUDA 12.1 on a 4070.
 - Windows 10 with torch 2.1 & CUDA 12.1 on a 3070.
+
+## Running Our Experiments
+
+### Some notes:
+
+- Sample input images are stored at data/, make sure you preprocess the image before running the program. (See [the first part of Usage](#usage))
+- The generated results will be stored at logs/, you can use `kire logs/name.obj` to render the 3D model with texture.
+- The result of stage 1 in our experiment would be stored as `{name}_mesh_2.obj`. (along with the original result `{name}_mesh.obj`)
+- See below sections for detailed instructions.
+
+
+```bash
+### Run our experiment
+# Using input image in data/ and output the result to logs/
+# Here we use "anya" as example, it'll take data/anya_rgba.png as input image, and output anya.obj and related files to logs/
+# Note that the stage 1 output of our experiment would be stored as data/anya_mesh_2.obj
+make withgs2 img=anya
+
+# Or you can provide your desired input and output directory
+# - prompt: input image path
+# - name: output file name, the result files will be stored to logs/
+make withgs2 prompt=data/anya_rgba.png name=anya
+
+# You can also set the training iterations of stage 1 (Gaussian refinement)
+make withgs2 img=anya iters=600
+
+# Visualization
+kire logs/anya.obj
+```
 
 ## Usage
 
@@ -193,22 +224,25 @@ azimuth: in (-180, 180), from +z to +x is (0, 90)
 
 * Trouble shooting OpenGL errors (e.g., `[F glutil.cpp:338] eglInitialize() failed`): 
 ```bash
-# either try to install OpenGL correctly (usually installed with the Nvidia driver), or use force_cuda_rast:
+# either try to install OpenGL correctly (usually installed with the Nvidia driver, so you can try to reinstall the driver to fix this issue), or use force_cuda_rast:
 python main.py --config configs/image_sai.yaml input=data/name_rgba.png save_path=name force_cuda_rast=True
 
 kire mesh.obj --force_cuda_rast
 ```
 
+- If you need a different version of CUDA then the one already on your OS, you can try install the correct version of CUDA and use [this](https://github.com/phohenecker/switch-cuda) to switch to the correct version. **(Only tested on Ubuntu)**
+
 ## Acknowledgement
 
 This work is built on many amazing research works and open-source projects, thanks a lot to all the authors for sharing!
 
+- [dream-gaussian](https://dreamgaussian.github.io)
 - [gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting) and [diff-gaussian-rasterization](https://github.com/graphdeco-inria/diff-gaussian-rasterization)
 - [threestudio](https://github.com/threestudio-project/threestudio)
 - [nvdiffrast](https://github.com/NVlabs/nvdiffrast)
 - [dearpygui](https://github.com/hoffstadt/DearPyGui)
 
-## Citation
+<!-- ## Citation
 
 ```
 @article{tang2023dreamgaussian,
@@ -217,4 +251,4 @@ This work is built on many amazing research works and open-source projects, than
   journal={arXiv preprint arXiv:2309.16653},
   year={2023}
 }
-```
+``` -->
