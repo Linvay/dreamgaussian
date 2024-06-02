@@ -71,8 +71,8 @@ Tested on:
 # Note that the stage 1 output of our experiment would be stored as data/anya_mesh_2.obj
 make withgs2 img=anya
 
-# Or you can provide your desired input and output directory
-# - prompt: input image path
+# For text-to-3D generation
+# - prompt: text prompt for diffusion model
 # - name: output file name, the result files will be stored to logs/
 make withgs2 prompt=data/anya_rgba.png name=anya
 

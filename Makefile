@@ -56,8 +56,8 @@ endif
 withgs2:
 ifdef img
 	python main.py --config configs/image.yaml input=data/${IMG}_rgba.png save_path=${NAME} iters=${ITERS}
-	python main2_gs.py --config configs/image.yaml input=data/${IMG}_rgba.png save_path=${NAME}
-	python main2.py --config configs/image.yaml input=data/${IMG}_rgba.png save_path=${NAME} mesh=logs/${IMG}_mesh_2.obj
+	python main2_gs.py --config configs/image_gs2.yaml input=data/${IMG}_rgba.png save_path=${NAME}
+	python main2.py --config configs/image_gs2.yaml input=data/${IMG}_rgba.png save_path=${NAME} mesh=logs/${IMG}_mesh_2.obj
 else
 	python main.py --config configs/text.yaml prompt="${PROMPT}" save_path=${NAME} iters=${ITERS}
 	python main2_gs.py --config configs/text_gs2.yaml prompt="${PROMPT}" save_path=${NAME}
